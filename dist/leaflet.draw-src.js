@@ -148,6 +148,39 @@ L.Draw.Feature = L.Handler.extend({
 		this._map.fire('draw:drawstop', { layerType: this.type });
 
 		this.fire('disabled', { handler: this.type });
+
+    this.removeAllEvents(this._container.parentElement, 'finishDrawing');
+    this.removeAllEvents(this._container.parentElement, 'keypress');
+	},
+
+	// -- used for storing the custom eventHandlers used by leaflet-draw
+	var: _eventHandlers = {}, // somewhere global
+
+	addEvent: function (node, event, handler, capture) {
+	  if(!(node in _eventHandlers)) {
+	    // _eventHandlers stores references to nodes
+	    _eventHandlers[node] = {};
+	  }
+	  if(!(event in _eventHandlers[node])) {
+	    // each entry contains another entry for each event type
+	    _eventHandlers[node][event] = [];
+	  }
+	  // capture reference
+	  _eventHandlers[node][event].push([handler, capture]);
+	  node.addEventListener(event, handler, capture);
+	},
+
+	removeAllEvents: function (node, event) {
+	  if(node in _eventHandlers) {
+	    var handlers = _eventHandlers[node];
+	    if(event in handlers) {
+	      var eventHandlers = handlers[event];
+	      for(var i = eventHandlers.length; i--;) {
+		var handler = eventHandlers[i];
+		node.removeEventListener(event, handler[0], handler[1]);
+	      }
+	    }
+	  }
 	},
 
 	addHooks: function () {
@@ -693,6 +726,25 @@ L.Draw.Polygon = L.Draw.Polyline.extend({
 		// The first marker should have a click handler to close the polygon
 		if (markerCount === 1) {
 			this._markers[0].on('click', this._finishShape, this);
+		}
+
+		if (markerCount == 3) {
+		  //finish polygon if enter or save button pressed
+		  var this_Ref = this;
+		  this.addEvent(this._container.parentElement, 'keypress', function (e) {
+		    if (e.keyCode == 13) {
+		      this_Ref._finishShape();
+		    }
+		  }, false);
+
+		  // Listen for the Finish button click
+		  this.addEvent(this._container.parentElement, 'finishDrawing' ,function (e) {
+		    this_Ref._finishShape();
+		  }, false);
+
+		  var event = new CustomEvent('thirdMarker');
+		  // Dispatch the event.
+		  document.getElementById("map-container").dispatchEvent(event);
 		}
 
 		// Add and update the double click handler
