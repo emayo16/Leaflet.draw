@@ -149,7 +149,7 @@ L.Draw.Feature = L.Handler.extend({
 
 		this.fire('disabled', { handler: this.type });
 
-    this.removeAllEvents(this._container.parentElement, 'finishDrawing');
+    this.removeAllEvents(this._container.parentElement, 'createZone');
     this.removeAllEvents(this._container.parentElement, 'keypress');
 	},
 
@@ -738,7 +738,7 @@ L.Draw.Polygon = L.Draw.Polyline.extend({
 		  }, false);
 
 		  // Listen for the Finish button click
-		  this.addEvent(this._container.parentElement, 'finishDrawing' ,function (e) {
+		  this.addEvent(this._container.parentElement, 'createZone' ,function (e) {
 		    this_Ref._finishShape();
 		  }, false);
 
